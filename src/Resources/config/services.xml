@@ -8,5 +8,15 @@
                 <argument type="service" id="service_container"/>
             </call>
     	</service>
+
+		<service id="Sas\SyncerModule\ScheduledTask\SyncerTask">
+            <tag name="shopware.scheduled.task" />
+        </service>
+
+        <service id="Sas\SyncerModule\ScheduledTask\SyncerTaskHandler">
+            <argument type="service" id="scheduled_task.repository" />
+            <tag name="messenger.message_handler" />
+        </service>
+
     </services>
 </container>
