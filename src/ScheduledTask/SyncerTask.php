@@ -13,6 +13,6 @@ class SyncerTask extends ScheduledTask
 
     public static function getDefaultInterval(): int
     {
-        return 10; // 5 minutes
+        return 30; // 30 seconds
     }
 }

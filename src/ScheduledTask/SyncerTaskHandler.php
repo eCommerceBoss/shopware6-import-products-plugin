@@ -13,7 +13,7 @@ class SyncerTaskHandler extends ScheduledTaskHandler
 
     public function run(): void
     {
-    	error_log( date().": cron is working.", 3, "log.txt" );
+    	error_log( '['.date("F j, Y, g:i a e O").']'.": Cron is working. \n", 3, "log.txt" );
         echo 'Do stuff!';
     }
 }
