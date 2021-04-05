@@ -18,5 +18,9 @@
             <tag name="messenger.message_handler" />
         </service>
 
+        <service id="Sas\SyncerModule\Command\SyncerCommand">
+            <tag name="console.command"/>
+        </service>
+
     </services>
 </container>
