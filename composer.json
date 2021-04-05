@@ -1,0 +1,45 @@
+{
+    "name": "sas/syncer-module",
+    "description": "Syncer Module",
+    "version": "1.0.4",
+    "type": "shopware-platform-plugin",
+    "keywords": ["syncer", "news"],
+    "license":"MIT",
+    "authors":[
+        {
+            "name":"Ivan Denisov",
+            "email": "ivandenisov7@gmail.com"
+        }
+    ],
+    "require": {
+        "shopware/core": "*",
+        "shopware/storefront": "*",
+        "shopware/administration": "*"
+    },
+    "extra": {
+        "shopware-plugin-class": "Sas\\SyncerModule\\SasSyncerModule",
+        "plugin-icon": "src/Resources/config/plugin.png",
+        "copyright": "by Christopher Dosin",
+        "label": {
+            "de-DE": "Amsterdam Syncer Module",
+            "en-GB": "Amsterdam Syncer Module"
+        },
+        "description": {
+            "de-DE": "Amsterdam Product Syncer Module",
+            "en-GB": "Amsterdam Product Syncer Module"
+        },
+        "manufacturerLink": {
+            "en-GB": "https://shapeandshift.dev",
+            "de-DE": "https://shapeandshift.dev"
+        },
+        "supportLink": {
+            "de-DE": "https://shapeandshift.dev",
+            "en-GB": "https://shapeandshift.dev"
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Sas\\SyncerModule\\": "src/"
+        }
+    }
+}
