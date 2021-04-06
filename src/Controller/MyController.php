@@ -2,11 +2,14 @@
 
 namespace Sas\SyncerModule\Controller;
 
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\Statement;
 use Shopware\Core\Framework\Routing\Annotation\RouteScope;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
+use Sas\SyncerModule\Controller\ProductController;
 use Sas\SyncerModule\Service\WritingProductData;
 use Shopware\Core\Framework\Context;
 
@@ -20,9 +23,11 @@ class MyController extends AbstractController
      * @var SyncServiceInterface
      */
     private $writingData;
+    private $connection;
 
-    public function __construct(WritingProductData $writingData)
+    public function __construct(WritingProductData $writingData, Connection $connection)
     {
+        $this->connection = $connection;
         $this->writingData = $writingData;
     }
      
@@ -41,7 +46,7 @@ class MyController extends AbstractController
             "price"=>123
         ];
         $context = Context::createDefaultContext();
-        $this->writingData->writeData($context);
+        $this->writingData->writeData($context, $this->connection);
         exit;
     	$url = "http://109.237.219.217/api/articlefeed/";
 	    $token = "wHVs3S7yMKtmvPHSVWj99naCnqdX4WaTVwCVT5rp";
@@ -60,12 +65,11 @@ class MyController extends AbstractController
 	    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
 	    $xmlString = curl_exec($ch);
-	    print_r($xmlString);exit;
+	    
 	    $xml = simplexml_load_string($xmlString, "SimpleXMLElement", LIBXML_NOCDATA);
 	    $json = json_encode($xml);
 	    $array = json_decode($json,TRUE);
-        echo "<pre>";
-        print_r($array);exit;
+
         return new JsonResponse($array);
     }
 
