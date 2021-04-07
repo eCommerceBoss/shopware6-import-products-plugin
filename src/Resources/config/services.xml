@@ -24,5 +24,11 @@
             <argument type="service" id="category.repository"/>
             <argument type="service" id="category_translation.repository"/>
         </service>
+        <service id="Sas\SyncerModule\Extension\Content\Category\CategoryExtensionDefinition">
+            <tag name="shopware.entity.definition" entity="category_extension"/>
+        </service>
+        <service id="Sas\SyncerModule\Extension\Content\Category\CategoryExtension">
+            <tag name="shopware.entity.extension"/>
+        </service>
     </services>
 </container>
