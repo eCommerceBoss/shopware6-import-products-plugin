@@ -33,16 +33,16 @@ class WritingProductData
     public function writeData(Context $context, Connection $connection): void
     {
         $category_extern_id = 1;
-        $query = $connection->createQueryBuilder();
-        $query->select('id')->from('Category')->where('extern_id = '.$category_extern_id );
-        $statement = $query->execute();
-        if ($statement instanceof Statement) {
-            $result = $statement->fetchAll();
-            // $totalCount = (int) $connection->fetchColumn('SELECT FOUND_ROWS()');
-        }
+        // $query = $connection->createQueryBuilder();
+        // $query->select('id')->from('Category')->where('extern_id = '.$category_extern_id );
+        // $statement = $query->execute();
+        // if ($statement instanceof Statement) {
+        //     $result = $statement->fetchAll();
+        //     // $totalCount = (int) $connection->fetchColumn('SELECT FOUND_ROWS()');
+        // }
         $category_id = Uuid::randomHex();
-        if(count($result) == 0)
-        {
+        // if(count($result) == 0)
+        // {
             $this->categoryRepository->create([
                 [
                     'id' => $category_id,
@@ -50,9 +50,9 @@ class WritingProductData
                 ]
             ], $context);
 
-            $query->update('Category')->set('extern_id', $category_extern_id)->where('id = '.$category_id);
-            $statement = $query->execute();
-        }
+            // $query->update('Category')->set('extern_id', $category_extern_id)->where('id = '.$category_id);
+            // $statement = $query->execute();
+        // }
         exit;
         $criteria = new Criteria();
         $criteria->addFilter(new EqualsFilter('name', 'Example product'));
