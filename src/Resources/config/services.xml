@@ -21,6 +21,8 @@
         <service id="Sas\SyncerModule\Service\WritingProductData" >
             <argument type="service" id="product.repository"/>
             <argument type="service" id="tax.repository"/>
+            <argument type="service" id="category.repository"/>
+            <argument type="service" id="category_translation.repository"/>
         </service>
     </services>
 </container>

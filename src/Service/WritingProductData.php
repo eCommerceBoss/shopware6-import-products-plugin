@@ -23,15 +23,16 @@ class WritingProductData
      */
     private $taxRepository;
 
-    public function __construct(EntityRepositoryInterface $productRepository, EntityRepositoryInterface $taxRepository)
+    public function __construct(EntityRepositoryInterface $productRepository, EntityRepositoryInterface $taxRepository, EntityRepositoryInterface $categoryRepository)
     {
         $this->productRepository = $productRepository;
         $this->taxRepository = $taxRepository;
+        $this->categoryRepository = $categoryRepository;
     }
 
     public function writeData(Context $context, Connection $connection): void
     {
-        $category_extern_id = 0;
+        $category_extern_id = 1;
         $query = $connection->createQueryBuilder();
         $query->select('id')->from('Category')->where('extern_id = '.$category_extern_id );
         $statement = $query->execute();
@@ -39,15 +40,18 @@ class WritingProductData
             $result = $statement->fetchAll();
             // $totalCount = (int) $connection->fetchColumn('SELECT FOUND_ROWS()');
         }
-        if(count($result) > 0)
+        $category_id = Uuid::randomHex();
+        if(count($result) == 0)
         {
-            print_r("ok");
-            //update
-        }
-        else
-        {
-            print_r("no");
-            //insert
+            $this->categoryRepository->create([
+                [
+                    'id' => $category_id,
+                    'name' => 'acs'
+                ]
+            ], $context);
+
+            $query->update('Category')->set('extern_id', $category_extern_id)->where('id = '.$category_id);
+            $statement = $query->execute();
         }
         exit;
         $criteria = new Criteria();
