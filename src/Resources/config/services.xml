@@ -4,6 +4,7 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
    <imports>
        <import resource="service_controller.xml"/>
+       <import resource="service_command.xml"/>
    </imports>
     <services>
 		<service id="Sas\SyncerModule\ScheduledTask\SyncerTask">
@@ -13,10 +14,6 @@
         <service id="Sas\SyncerModule\ScheduledTask\SyncerTaskHandler">
             <argument type="service" id="scheduled_task.repository" />
             <tag name="messenger.message_handler" />
-        </service>
-
-        <service id="Sas\SyncerModule\Command\SyncerCommand">
-            <tag name="console.command"/>
         </service>
         <service id="Sas\SyncerModule\Service\WritingProductData" >
             <argument type="service" id="product.repository"/>

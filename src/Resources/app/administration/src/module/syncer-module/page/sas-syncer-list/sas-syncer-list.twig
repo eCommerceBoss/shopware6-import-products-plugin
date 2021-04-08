@@ -17,32 +17,7 @@
         {% endblock %}
         {% block sas_syncer_content %}
             <template #content>
-                <sw-card-view>
-                    {% block sas_syncer_base_form %}
-                        <sw-card :title="$tc('sas-syncer.general.cardName')">
-                            <div class="sas-syncer-base-form">
-                                <sw-container columns="repeat(auto-fit, minmax(250px, 1fr))" gap="0px 32px">
-                                    {% block sas_syncer_base_form_token_field %}
-                                        <sw-text-field
-                                            required
-                                            :label="$tc('sas-syncer.general.cardToken')"
-                                            :placeholder="$tc('sas-syncer.general.cardTokenPlaceholder')"
-                                            v-model="token">
-                                        </sw-text-field>
-                                    {% endblock %}
-                                    {% block sas_syncer_base_form_url_field %}
-                                        <sw-text-field
-                                            required
-                                            :label="$tc('sas-syncer.general.cardUrl')"
-                                            :placeholder="$tc('sas-syncer.general.cardUrlPlaceholder')"
-                                            v-model="url">
-                                        </sw-text-field>
-                                    {% endblock %}
-                                </sw-container>
-                            </div>
-                        </sw-card>
-                    {% endblock %}
-                </sw-card-view>
+                
             </template>
         {% endblock %}
     </sw-page>
