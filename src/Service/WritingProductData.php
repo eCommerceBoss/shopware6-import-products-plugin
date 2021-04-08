@@ -33,17 +33,42 @@ class WritingProductData
      */
     private $categoryTranslationRepository;
 
-    public function __construct(EntityRepositoryInterface $productRepository, EntityRepositoryInterface $taxRepository, EntityRepositoryInterface $categoryRepository, EntityRepositoryInterface $categoryTranslationRepository)
+    /**
+     * @var EntityRepositoryInterface
+     */
+    private $propertyGroupRepository;
+
+    /**
+     * @var EntityRepositoryInterface
+     */
+    private $propertyGroupTranslationRepository;
+
+    /**
+     * @var EntityRepositoryInterface
+     */
+    private $propertyGroupOptionRepository;
+
+    /**
+     * @var EntityRepositoryInterface
+     */
+    private $propertyGroupOptionTranslationRepository;
+
+    public function __construct(EntityRepositoryInterface $productRepository, EntityRepositoryInterface $taxRepository, EntityRepositoryInterface $categoryRepository, EntityRepositoryInterface $categoryTranslationRepository, EntityRepositoryInterface $propertyGroupRepository, EntityRepositoryInterface $propertyGroupTranslationRepository, EntityRepositoryInterface $propertyGroupOptionRepository, EntityRepositoryInterface $propertyGroupOptionTranslationRepository)
     {
         $this->productRepository = $productRepository;
         $this->taxRepository = $taxRepository;
         $this->categoryRepository = $categoryRepository;
         $this->categoryTranslationRepository = $categoryTranslationRepository;
+        $this->propertyGroupRepository = $propertyGroupRepository;
+        $this->propertyGroupTranslationRepository = $propertyGroupTranslationRepository;
+        $this->propertyGroupOptionRepository = $propertyGroupOptionRepository;
+        $this->propertyGroupOptionTranslationRepository = $propertyGroupOptionTranslationRepository;
     }
 
     public function writeData(Context $context, Connection $connection): void
     {
         //category
+
         $category_ids = [];
         $category = [
             "extern_id"=>98,
@@ -129,7 +154,97 @@ class WritingProductData
 
 
         //property
-        
+
+        $property = [            
+                "extern_id" => 3,
+                "name" => "Width",
+                "type" => "white",
+                "value" => "90"
+        ];
+
+        $query = $connection->createQueryBuilder();
+        $query->select('property_group_id')->from('property_group_extension')->where('extern_id = '.$property['extern_id'] );
+        $statement = $query->execute();
+        if ($statement instanceof Statement) {
+            $result = $statement->fetchAll();
+        }
+        if(count($result) == 0)
+        {
+            $propertyGroupID = Uuid::randomHex();
+            $this->propertyGroupRepository->create([
+                [
+                    'id' => $propertyGroupID,
+                    'displayType' => $property['type'],
+                    'name' => $property['name']
+                ]
+            ], $context);
+
+            $propertyGroupOptionID = Uuid::randomHex();
+            $this->propertyGroupOptionRepository->create([
+                [
+                    'id' => $propertyGroupOptionID,
+                    'groupId' => $propertyGroupID,
+                    'name' => $property['value']
+                ]
+            ], $context);
+
+            $this->propertyGroupRepository->upsert([
+                [
+                    'id' => $propertyGroupID,
+                    'property_group_extension' => ['extern_id' => $property['extern_id']]
+                ]
+            ], $context);
+        }
+        else
+        {
+            $propertyGroupID = Uuid::fromBytesToHex($result[0]['property_group_id']);
+            $query = $connection->createQueryBuilder();
+            $query->select('name')->from('property_group_translation')->where('property_group_id = 0x'.$propertyGroupID );
+            $statement = $query->execute();
+            if ($statement instanceof Statement) {
+                $result = $statement->fetchAll();
+            }
+            if($result[0]['name'] != $property['name'])
+            {
+                $this->propertyGroupRepository->update([
+                    [
+                        'id' => $propertyGroupID,
+                        'displayType' => $property['type'],
+                        'name' => $property['name']
+                    ]
+                ], $context);
+            }
+
+            $query = $connection->createQueryBuilder();
+            $query->select('property_group_option_id')->from('property_group_option_translation')->where('name = '.$property['value']);
+            $statement = $query->execute();
+            if ($statement instanceof Statement) {
+                $result = $statement->fetchAll();
+            }
+            if(count($result) == 0)
+            {
+                $propertyGroupOptionID = Uuid::randomHex();
+                $this->propertyGroupOptionRepository->create([
+                    [
+                        'id' => $propertyGroupOptionID,
+                        'groupId' => $propertyGroupID,
+                        'name' => $property['value']
+                    ]
+                ], $context);
+            }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
         exit;
 
 

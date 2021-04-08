@@ -1,7 +1,7 @@
 <?php declare(strict_types=1);
 
 namespace Sas\SyncerModule\Extension\Content\PropertyGroupOption;
-use Shopware\Core\Content\Property\Aggregate\PropertyGroupOptionDefinition;
+use Shopware\Core\Content\Property\Aggregate\PropertyGroupOption\PropertyGroupOptionDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityExtension;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\OneToOneAssociationField;
 use Shopware\Core\Framework\DataAbstractionLayer\FieldCollection;

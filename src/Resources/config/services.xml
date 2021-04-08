@@ -23,11 +23,37 @@
             <argument type="service" id="tax.repository"/>
             <argument type="service" id="category.repository"/>
             <argument type="service" id="category_translation.repository"/>
+            <argument type="service" id="property_group.repository"/>
+            <argument type="service" id="property_group_translation.repository"/>
+            <argument type="service" id="property_group_option.repository"/>
+            <argument type="service" id="property_group_option_translation.repository"/>
         </service>
+
         <service id="Sas\SyncerModule\Extension\Content\Category\CategoryExtensionDefinition">
             <tag name="shopware.entity.definition" entity="category_extension"/>
         </service>
         <service id="Sas\SyncerModule\Extension\Content\Category\CategoryExtension">
+            <tag name="shopware.entity.extension"/>
+        </service>
+
+        <service id="Sas\SyncerModule\Extension\Content\Product\ProductExtensionDefinition">
+            <tag name="shopware.entity.definition" entity="product_extension"/>
+        </service>
+        <service id="Sas\SyncerModule\Extension\Content\Product\ProductExtension">
+            <tag name="shopware.entity.extension"/>
+        </service>
+
+        <service id="Sas\SyncerModule\Extension\Content\PropertyGroup\PropertyGroupExtensionDefinition">
+            <tag name="shopware.entity.definition" entity="property_group_extension"/>
+        </service>
+        <service id="Sas\SyncerModule\Extension\Content\PropertyGroup\PropertyGroupExtension">
+            <tag name="shopware.entity.extension"/>
+        </service>
+
+        <service id="Sas\SyncerModule\Extension\Content\PropertyGroupOption\PropertyGroupOptionExtensionDefinition">
+            <tag name="shopware.entity.definition" entity="property_group_option_extension"/>
+        </service>
+        <service id="Sas\SyncerModule\Extension\Content\PropertyGroupOption\PropertyGroupOptionExtension">
             <tag name="shopware.entity.extension"/>
         </service>
     </services>

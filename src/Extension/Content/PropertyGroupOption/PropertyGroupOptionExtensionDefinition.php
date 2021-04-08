@@ -2,7 +2,7 @@
 
 namespace Sas\SyncerModule\Extension\Content\PropertyGroupOption;
 
-use Shopware\Core\Content\Property\Aggregate\PropertyGroupOptionDefinition;
+use Shopware\Core\Content\Property\Aggregate\PropertyGroupOption\PropertyGroupOptionDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityDefinition;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\BoolField;
 use Shopware\Core\Framework\DataAbstractionLayer\Field\CustomFields;
