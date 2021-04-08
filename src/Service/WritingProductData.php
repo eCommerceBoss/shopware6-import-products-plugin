@@ -155,6 +155,7 @@ class WritingProductData
 
         //property
 
+        $property_group_option_ids = [];
         $property = [            
                 "extern_id" => 3,
                 "name" => "Width",
@@ -194,6 +195,8 @@ class WritingProductData
                     'property_group_extension' => ['extern_id' => $property['extern_id']]
                 ]
             ], $context);
+
+            arrya_push($property_group_option_ids, $propertyGroupOptionID);
         }
         else
         {
@@ -231,7 +234,14 @@ class WritingProductData
                         'name' => $property['value']
                     ]
                 ], $context);
+                arrya_push($property_group_option_ids, $propertyGroupOptionID);       
             }
+            else
+            {
+                $propertyGroupOptionID = Uuid::fromBytesToHex($result[0]['property_group_option_id']);
+                arrya_push($property_group_option_ids, $propertyGroupOptionID);       
+            }
+
         }
 
 
