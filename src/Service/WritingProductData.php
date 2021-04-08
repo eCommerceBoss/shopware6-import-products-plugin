@@ -127,7 +127,8 @@ class WritingProductData
                     ]
                 ], $context);
 
-            array_push($category_ids, $category_id);    
+            $array = ['category_id' => $category_id, 'name' => $category['name']];
+            array_push($category_ids, $array);    
         }
         else
         {
@@ -148,13 +149,13 @@ class WritingProductData
                     ]
                 ], $context);    
             }
-
-            array_push($category_ids, $category_id);    
+            $array = ['category_id' => $category_id, 'name' => $category['name']];
+            array_push($category_ids, $array);    
         }
 
 
         //property
-
+        $properties = [];
         $property_group_option_ids = [];
         $property = [            
                 "extern_id" => 3,
@@ -196,7 +197,8 @@ class WritingProductData
                 ]
             ], $context);
 
-            arrya_push($property_group_option_ids, $propertyGroupOptionID);
+            $array = ['groupId' => $propertyGroupOptionID, 'name'=>$property['name'], 'property_group_id'=>$propertyGroupID];
+            array_push($property_group_option_ids, $array);
         }
         else
         {
@@ -234,48 +236,98 @@ class WritingProductData
                         'name' => $property['value']
                     ]
                 ], $context);
-                arrya_push($property_group_option_ids, $propertyGroupOptionID);       
+                $array = ['groupId' => $propertyGroupOptionID, 'name'=>$property['name'], 'property_group_id'=>$propertyGroupID];
+                array_push($property_group_option_ids, $array);       
             }
             else
             {
                 $propertyGroupOptionID = Uuid::fromBytesToHex($result[0]['property_group_option_id']);
-                arrya_push($property_group_option_ids, $propertyGroupOptionID);       
+                $array = ['groupId' => $propertyGroupOptionID, 'name'=>$property['name'], 'property_group_id'=>$propertyGroupID];
+                array_push($property_group_option_ids, $array);       
             }
 
         }
 
 
+        //product
 
+        $product = [
+            "extern_id" => 12312,
+            "name" => "IvanCake",
+            "media" =>[],
+            "price" => 0,
+            "property" => $property_group_option_ids,
+            "category" => $category_ids,
+            'product_number' => "ss788ssds7",
+            'stock'=>123
+        ];
 
+        $query = $connection->createQueryBuilder();
+        $query->select('product_id')->from('product_extension')->where('extern_id = '.$product['extern_id'] );
+        $statement = $query->execute();
+        if ($statement instanceof Statement) {
+            $result = $statement->fetchAll();
+        }
+        $tax_id = $this->getTaxId($context);
+        $tax = $this->taxRepository->search((new Criteria())->addFilter(new EqualsFilter('id', $tax_id)), $context)->first();
+        $grossPrice = $product['price']+($product['price']*$tax->getTaxRate())/100;
+        $price = [[
+                    'linked' => false,
+                    'net' => (float) $product['price'],
+                    'gross' => (float) $grossPrice,
+                    'currencyId' => Defaults::CURRENCY
+            ]];
+        if(count($result) == 0)
+        {
+            $productId = Uuid::randomHex();
+            $this->productRepository->create([
+                [
+                    'id' => $productId,
+                    'name' => $product['name'],
+                    'taxId' => $tax_id,
+                    'price'=>$price,
+                    'productNumber'=>$product['product_number'],
+                    'stock'=>$product['stock']                
+                ]
+            ], $context);
+            $this->productRepository->upsert([
+                [
+                    'id' => $productId,
+                    'categories' => $product['category'],
+                    'product_extension' =>
+                    [
+                        'extern_id' => $product['extern_id']
+                    ]
+                ]
+            ], $context);
+        }
+        else
+        {
+            $productId = Uuid::fromBytesToHex($result[0]['product_id']);
+            $this->productRepository->update([
+                [
+                    'id' => $productId,
+                    'name' => $product['name'],
+                    'taxId' => $tax_id,
+                    'price'=>$price,
+                    'productNumber'=>$product['product_number'],
+                    'stock'=>$product['stock']                
+                ]
+            ], $context);
+            $this->productRepository->upsert([
+                [
+                    'id' => $productId,
+                    'categories' => $product['category'],
+                    'product_extension' =>
+                    [
+                        'extern_id' => $product['extern_id']
+                    ]
+                ]
+            ], $context);
+        }
 
-
-
-
-
-
-
-
+    
         exit;
-
-
-
-
-
-
-
-
-
-        $criteria = new Criteria();
-        $criteria->addFilter(new EqualsFilter('name', 'Example product'));
-
-        $productId = $this->productRepository->searchIds($criteria, $context)->firstId();
-
-        $this->productRepository->update([
-            [
-                'id' => $productId,
-                'name' => 'New name'
-            ]
-        ], $context);
     }
 
     private function getTaxId(Context $context): string
