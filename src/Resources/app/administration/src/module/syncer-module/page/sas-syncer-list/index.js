@@ -8,7 +8,9 @@ Component.register('sas-syncer-list', {
         return {
             token:null,
             url:null,
-            res: null
+            res: null,
+            isLoading:false,
+            result:[]
         };
     },
     computed: {
@@ -19,8 +21,15 @@ Component.register('sas-syncer-list', {
 
     },
     methods: {
-        onSave() {
-            this.res = this.syncRestApiService.myCustomAction();
+        async onSave() {
+            this.isLoading = true;
+            const response = await this.syncRestApiService.myCustomAction();
+            this.isLoading = false;
+            for(var i = 0; i < response.length; i++)
+            {
+                this.result[i] = (i+1) + '. ' + response[i].name;
+            }
+
         }
     }
 });

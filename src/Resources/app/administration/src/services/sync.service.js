@@ -13,7 +13,8 @@ class SyncRestApiService extends ApiService
                 headers: this.getBasicHeaders()
             })
             .then((response) => {
-                return ApiService.handleResponse(response);
+                console.log(response);
+                return ApiService.handleResponse(response.data);
             });
     }
 }

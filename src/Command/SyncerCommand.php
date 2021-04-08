@@ -36,7 +36,7 @@ class SyncerCommand extends Command
     {
 
         $context = Context::createDefaultContext();
-        $this->writingData->writeData($context, $this->connection);
+        // $this->writingData->writeData($context, $this->connection);
         $output->writeln('It works!');
 
         // Exit code 0 for success

@@ -10,6 +10,8 @@
                 <sw-button-process
                     class="sw-customer-create__save-action"
                     variant="primary"
+                    :disabled="isLoading"
+                    :isLoading="isLoading"
                     @click="onSave">
                     {{ $tc('sas-syncer.general.syncerButton') }}
                 </sw-button-process>
@@ -17,7 +19,9 @@
         {% endblock %}
         {% block sas_syncer_content %}
             <template #content>
-                
+                <div class="result_div" v-for="res in result">
+                    <p>{{  res }}</p>
+                </div>
             </template>
         {% endblock %}
     </sw-page>

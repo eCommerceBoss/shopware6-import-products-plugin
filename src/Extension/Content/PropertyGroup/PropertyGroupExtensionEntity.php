@@ -1,12 +1,12 @@
 <?php declare(strict_types=1);
 
-namespace Sas\SyncerModule\Extension\Content\Category;
+namespace Sas\SyncerModule\Extension\Content\PropertyGroup;
 
 use Shopware\Core\Checkout\Cart\Cart;
 use Shopware\Core\Framework\DataAbstractionLayer\Entity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityIdTrait;
 
-class CategoryExtensionEntity extends Entity
+class PropertyGroupExtensionEntity extends Entity
 {
     use EntityIdTrait;
 
