@@ -90,14 +90,16 @@ class SyncerCommand extends Command
             $data[] = $product;
         }
 
-            $output->writeln('product importing started...');
+        $output->writeln('');
+        $output->writeln('Importing the products started...');
+
         foreach ($data as $key => $value) {
             $context = Context::createDefaultContext();
             $this->writingData->writeData($value, $context, $this->connection);
-            $output->writeln($value['name']);
-            $output->writeln('');
+            $output->writeln('  '.($key+1) . ': ' . $value['name']);
         }     
-            $output->writeln('product importing end');
+
+        $output->writeln( count($data).' products imported.');
 
         // Exit code 0 for success
         return 0;
