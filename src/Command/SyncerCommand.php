@@ -8,7 +8,9 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Sas\SyncerModule\Service\WritingProductData;
 use Shopware\Core\Framework\Context;
 use Doctrine\DBAL\Connection;
+use Sas\SyncerModule\Service\SaveMedia;
 use SimpleXMLElement;
+use Sas\SyncerModule\Config\Config;
 
 class SyncerCommand extends Command
 {
@@ -16,14 +18,18 @@ class SyncerCommand extends Command
     protected static $defaultName = 'syncer-commands:start';
 
     private $writingData;
+    private $saveMedia;
 
     private $connection;
+    private $config;
 
-    public function __construct(WritingProductData $writingData, Connection $connection)
+    public function __construct(WritingProductData $writingData, Connection $connection, SaveMedia $saveMedia, Config $config)
     {
         parent::__construct();
-        $this->writingData = $writingData;
         $this->connection = $connection;
+        $this->writingData = $writingData;
+        $this->saveMedia = $saveMedia;
+        $this->config = $config;
     }
 
     // Provides a description, printed out in bin/console
@@ -37,8 +43,9 @@ class SyncerCommand extends Command
     {
 
         $context = Context::createDefaultContext();
-        $url = "http://109.237.219.217/api/articlefeed/";
-        $token = "wHVs3S7yMKtmvPHSVWj99naCnqdX4WaTVwCVT5rp";
+        $base_url = $this->config->getApiBaseUrl();
+        $url = $this->config->getArticleApiUrl();
+        $token = $this->config->getApiToken();
         
         $ch = curl_init();
         $headers = array(
@@ -67,6 +74,29 @@ class SyncerCommand extends Command
             $price = (string)$article->articlepurchaseprice;
             $price = str_replace(',', '.', $price);
             $product['price'] = number_format((float)$price, 2, '.', '');
+            $product['media'] = [];
+            foreach ($article->images->image as $image) {
+                $image_url = (string)$image;
+                $context = Context::createDefaultContext();
+                $url = $base_url.$image_url;
+                $ch = curl_init();
+                $headers = array(
+                    'token: '.$token
+                );
+
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                curl_setopt($ch, CURLOPT_HEADER, 0);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+                // Timeout in seconds
+                curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+                $image_content = curl_exec($ch);
+                $mediaId = $this->saveMedia->addImageToProductMedia($image_content, $context);
+                array_push($product['media'], $mediaId);
+
+            }
             $product['category'] = [];
             foreach ($article->categories->categorie as $categorie) {
                 $category = [];

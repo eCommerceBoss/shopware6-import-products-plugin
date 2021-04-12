@@ -63,7 +63,12 @@ class WritingProductData
      */
     private $productPropertyRepository;
 
-    public function __construct(EntityRepositoryInterface $productRepository, EntityRepositoryInterface $productCategoryRepository, EntityRepositoryInterface $taxRepository, EntityRepositoryInterface $categoryRepository, EntityRepositoryInterface $categoryTranslationRepository, EntityRepositoryInterface $propertyGroupRepository, EntityRepositoryInterface $propertyGroupTranslationRepository, EntityRepositoryInterface $propertyGroupOptionRepository, EntityRepositoryInterface $propertyGroupOptionTranslationRepository, EntityRepositoryInterface $productPropertyRepository)
+    /**
+     * @var EntityRepositoryInterface
+     */
+    private $productMediaRepository;
+
+    public function __construct(EntityRepositoryInterface $productRepository, EntityRepositoryInterface $productCategoryRepository, EntityRepositoryInterface $taxRepository, EntityRepositoryInterface $categoryRepository, EntityRepositoryInterface $categoryTranslationRepository, EntityRepositoryInterface $propertyGroupRepository, EntityRepositoryInterface $propertyGroupTranslationRepository, EntityRepositoryInterface $propertyGroupOptionRepository, EntityRepositoryInterface $propertyGroupOptionTranslationRepository, EntityRepositoryInterface $productPropertyRepository, EntityRepositoryInterface $productMediaRepository)
     {
         $this->productRepository = $productRepository;
         $this->productCategoryRepository = $productCategoryRepository;
@@ -75,6 +80,7 @@ class WritingProductData
         $this->propertyGroupOptionRepository = $propertyGroupOptionRepository;
         $this->propertyGroupOptionTranslationRepository = $propertyGroupOptionTranslationRepository;
         $this->productPropertyRepository = $productPropertyRepository;
+        $this->productMediaRepository = $productMediaRepository;
     }
 
     public function writeData(Array $data, Context $context, Connection $connection): void
@@ -84,6 +90,7 @@ class WritingProductData
         $property_group_ids = [];
         $categories = $data['category'];
         $properties = $data['property'];
+        $mediaIds = $data['media'];
         //category
         foreach ($categories as $key => $category) {
 
@@ -319,6 +326,7 @@ class WritingProductData
         if(count($result) == 0)
         {
             $productId = Uuid::randomHex();
+            $cover_id = isset( $mediaIds[0] ) ? $mediaIds[0] : null;
             $this->productRepository->create([
                 [
                     'id' => $productId,
@@ -326,7 +334,10 @@ class WritingProductData
                     'productNumber' => $data['product_number'],
                     'stock' => $data['stock'],
                     'taxId' => $tax_id,
-                    'price' => $price
+                    'price' => $price,
+                    'cover' => [
+                        'mediaId'=>$cover_id
+                    ]
                 ]
             ], $context);
             $this->productRepository->update([
@@ -352,9 +363,20 @@ class WritingProductData
                     [
                         'id' => Uuid::randomHex(),
                         'productId' => $productId,
-                        'optionId' => $value2['id']
+                        'optionId' => $value2['groupOptionId']
                     ]
                 ], $context);
+            }
+            foreach ($mediaIds as $key3 => $mediaId) {
+                if($key3 == 0)
+                    continue;
+                $this->productMediaRepository->create([
+                    [
+                        'id' => Uuid::randomHex(),
+                        'productId' => $productId,
+                        'mediaId' => $mediaId
+                    ]
+                ], $context);    
             }
         }
         else
@@ -389,15 +411,60 @@ class WritingProductData
                     ]
                 ], $context);
             }
-            $this->productRepository->update([
-                [
-                    'id' => $productId,
-                    'name' => $data['name'],
-                    'stock' => $data['stock'],
-                    'taxId' => $tax_id,
-                    'price' => $price
-                ]
-            ], $context);
+            $query = $connection->createQueryBuilder();
+            $query->select('media_id')->from('product_media')->where('product_id = 0x'.$productId );
+            $statement = $query->execute();
+            if ($statement instanceof Statement) {
+                $result_media = $statement->fetchAll();
+            }
+            foreach ($result_media as $media_id_result) {
+                $this->productMediaRepository->delete([
+                    [
+                        'productId' => $productId,
+                        'mediaId' => Uuid::fromBytesToHex($media_id_result['media_id'])
+                    ]
+                ], $context);    
+            }
+            $query = $connection->createQueryBuilder();
+            $query->select('product_number')->from('product')->where('id = 0x'.$productId );
+            $statement = $query->execute();
+            if ($statement instanceof Statement) {
+                $result3 = $statement->fetchAll();
+            }
+
+            $cover_id = isset( $mediaIds[0] ) ? $mediaIds[0] : null;
+            if(count($result3) == 0)
+            {
+                $this->productRepository->create([
+                    [
+                        'id' => $productId,
+                        'name' => $data['name'],
+                        'productNumber' => $data['product_number'],
+                        'stock' => $data['stock'],
+                        'taxId' => $tax_id,
+                        'price' => $price,
+                        'cover' => [
+                            'mediaId'=>$cover_id
+                        ]
+                    ]
+                ], $context);
+            }
+            else
+            {
+                $this->productRepository->update([
+                    [
+                        'id' => $productId,
+                        'name' => $data['name'],
+                        'stock' => $data['stock'],
+                        'taxId' => $tax_id,
+                        'price' => $price,
+                        'cover' => [
+                            'mediaId'=>$cover_id
+                        ]
+                    ]
+                ], $context);
+            }
+            
 
             foreach ($category_ids as $key2 => $value2) {
                 $this->productCategoryRepository->upsert([
@@ -417,6 +484,18 @@ class WritingProductData
                         'optionId' => $value3['groupOptionId']
                     ]
                 ], $context);
+            }
+
+            foreach ($mediaIds as $key4 => $mediaId) {
+                if($key4 == 0)
+                    continue;
+                $this->productMediaRepository->upsert([
+                    [
+                        'id' => Uuid::randomHex(),
+                        'productId' => $productId,
+                        'mediaId' => $mediaId
+                    ]
+                ], $context);  
             }
 
         }

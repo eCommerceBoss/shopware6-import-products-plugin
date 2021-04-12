@@ -26,6 +26,15 @@
             <argument type="service" id="property_group_option.repository"/>
             <argument type="service" id="property_group_option_translation.repository"/>
             <argument type="service" id="product_property.repository"/>
+            <argument type="service" id="product_media.repository"/>
+        </service>
+
+        <service id="Sas\SyncerModule\Service\SaveMedia" >
+            <argument type="service" id="Shopware\Core\Content\Media\MediaService"/>
+            <argument type="service" id="Shopware\Core\Content\Media\File\FileSaver"/>
+        </service>
+
+        <service id="Sas\SyncerModule\Config\Config" >
         </service>
 
         <service id="Sas\SyncerModule\Extension\Content\Category\CategoryExtensionDefinition">

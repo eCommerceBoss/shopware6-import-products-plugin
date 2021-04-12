@@ -11,8 +11,10 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Shopware\Core\System\SystemConfig\SystemConfigService;
 use Sas\SyncerModule\Controller\ProductController;
 use Sas\SyncerModule\Service\WritingProductData;
+use Sas\SyncerModule\Service\SaveMedia;
 use Shopware\Core\Framework\Context;
 use SimpleXMLElement;
+use Sas\SyncerModule\Config\Config;
 
 
 /**
@@ -24,12 +26,16 @@ class MyController extends AbstractController
      * @var SyncServiceInterface
      */
     private $writingData;
+    private $saveMedia;
     private $connection;
+    private $config;
 
-    public function __construct(WritingProductData $writingData, Connection $connection)
+    public function __construct(WritingProductData $writingData, Connection $connection, SaveMedia $saveMedia, Config $config)
     {
         $this->connection = $connection;
         $this->writingData = $writingData;
+        $this->saveMedia = $saveMedia;
+        $this->config = $config;
     }
      
     /**
@@ -37,8 +43,9 @@ class MyController extends AbstractController
      */
     public function myActionApi(): JsonResponse
     {
-        $url = "http://109.237.219.217/api/articlefeed/";
-        $token = "wHVs3S7yMKtmvPHSVWj99naCnqdX4WaTVwCVT5rp";
+        $base_url = $this->config->getApiBaseUrl();
+        $url = $this->config->getArticleApiUrl();
+        $token = $this->config->getApiToken();
         
         $ch = curl_init();
         $headers = array(
@@ -69,7 +76,29 @@ class MyController extends AbstractController
             $product['price'] = number_format((float)$price, 2, '.', '');
             $cat_parent_extend_ids = [];
             $cat_by_key = [];
+            $product['media'] = [];
+            foreach ($article->images->image as $image) {
+                $image_url = (string)$image;
+                $context = Context::createDefaultContext();
+                $url = $base_url.$image_url;
+                $ch = curl_init();
+                $headers = array(
+                    'token: '.$token
+                );
 
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+                curl_setopt($ch, CURLOPT_HEADER, 0);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+                // Timeout in seconds
+                curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+
+                $image_content = curl_exec($ch);
+                $mediaId = $this->saveMedia->addImageToProductMedia($image_content, $context);
+                array_push($product['media'], $mediaId);
+
+            }
             foreach ($article->categories->categorie as $categorie) {
                 $category = [];
                 $category['extern_id'] = (int)$categorie['extern_id'];
@@ -122,11 +151,4 @@ class MyController extends AbstractController
         return new JsonResponse($data);
     }
 
-    private function processProduct( $itemProduct ){
-
-    }
-
-    private function processCategory( $itemCategory ){
-    	
-    }
 }
