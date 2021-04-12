@@ -17,6 +17,7 @@
         </service>
         <service id="Sas\SyncerModule\Service\WritingProductData" >
             <argument type="service" id="product.repository"/>
+            <argument type="service" id="product_category.repository"/>
             <argument type="service" id="tax.repository"/>
             <argument type="service" id="category.repository"/>
             <argument type="service" id="category_translation.repository"/>
@@ -24,6 +25,7 @@
             <argument type="service" id="property_group_translation.repository"/>
             <argument type="service" id="property_group_option.repository"/>
             <argument type="service" id="property_group_option_translation.repository"/>
+            <argument type="service" id="product_property.repository"/>
         </service>
 
         <service id="Sas\SyncerModule\Extension\Content\Category\CategoryExtensionDefinition">

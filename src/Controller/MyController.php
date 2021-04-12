@@ -67,13 +67,36 @@ class MyController extends AbstractController
             $price = (string)$article->articlepurchaseprice;
             $price = str_replace(',', '.', $price);
             $product['price'] = number_format((float)$price, 2, '.', '');
-            $product['category'] = [];
+            $cat_parent_extend_ids = [];
+            $cat_by_key = [];
+
             foreach ($article->categories->categorie as $categorie) {
                 $category = [];
                 $category['extern_id'] = (int)$categorie['extern_id'];
                 $category['parent_extern_id'] = (int)$categorie['parent_extern_id'];
                 $category['name'] = (string)$categorie;
-                $product['category'][] = $category;
+
+                $parent_extern_id = ''.$category['parent_extern_id'];
+                $cat_parent_extend_ids[$parent_extern_id] = (int)$categorie['extern_id'];
+                $cat_by_key[$parent_extern_id] = $category;
+            }
+
+            $key = '0';
+            $product['category'] = [];
+
+            if (array_key_exists($key, $cat_parent_extend_ids)) {
+                $key_count = 0;
+                $product['category'][] = $cat_by_key[$key];
+                $key = $cat_parent_extend_ids[$key];
+                $key_count++;
+                while ( $key_count < count($cat_parent_extend_ids)) {
+                    if (!array_key_exists($key, $cat_parent_extend_ids)) {
+                        break;
+                    }
+                    $product['category'][] = $cat_by_key[$key];
+                    $key = $cat_parent_extend_ids[$key];
+                    $key_count++;
+                }
             }
             $product['property'] = [];
             foreach ($article->attributes->attributegroup as $attributegroup) {

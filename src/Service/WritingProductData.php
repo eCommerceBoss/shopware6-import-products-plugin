@@ -21,6 +21,11 @@ class WritingProductData
     /**
      * @var EntityRepositoryInterface
      */
+    private $productCategoryRepository;
+
+    /**
+     * @var EntityRepositoryInterface
+     */
     private $taxRepository;
 
     /**
@@ -53,9 +58,15 @@ class WritingProductData
      */
     private $propertyGroupOptionTranslationRepository;
 
-    public function __construct(EntityRepositoryInterface $productRepository, EntityRepositoryInterface $taxRepository, EntityRepositoryInterface $categoryRepository, EntityRepositoryInterface $categoryTranslationRepository, EntityRepositoryInterface $propertyGroupRepository, EntityRepositoryInterface $propertyGroupTranslationRepository, EntityRepositoryInterface $propertyGroupOptionRepository, EntityRepositoryInterface $propertyGroupOptionTranslationRepository)
+    /**
+     * @var EntityRepositoryInterface
+     */
+    private $productPropertyRepository;
+
+    public function __construct(EntityRepositoryInterface $productRepository, EntityRepositoryInterface $productCategoryRepository, EntityRepositoryInterface $taxRepository, EntityRepositoryInterface $categoryRepository, EntityRepositoryInterface $categoryTranslationRepository, EntityRepositoryInterface $propertyGroupRepository, EntityRepositoryInterface $propertyGroupTranslationRepository, EntityRepositoryInterface $propertyGroupOptionRepository, EntityRepositoryInterface $propertyGroupOptionTranslationRepository, EntityRepositoryInterface $productPropertyRepository)
     {
         $this->productRepository = $productRepository;
+        $this->productCategoryRepository = $productCategoryRepository;
         $this->taxRepository = $taxRepository;
         $this->categoryRepository = $categoryRepository;
         $this->categoryTranslationRepository = $categoryTranslationRepository;
@@ -63,16 +74,63 @@ class WritingProductData
         $this->propertyGroupTranslationRepository = $propertyGroupTranslationRepository;
         $this->propertyGroupOptionRepository = $propertyGroupOptionRepository;
         $this->propertyGroupOptionTranslationRepository = $propertyGroupOptionTranslationRepository;
+        $this->productPropertyRepository = $productPropertyRepository;
     }
 
     public function writeData(Array $data, Context $context, Connection $connection): void
     {
+        $extern_ids = [];
         $category_ids = [];
         $property_group_ids = [];
         $categories = $data['category'];
         $properties = $data['property'];
         //category
-        foreach ($categories as $category) {
+        foreach ($categories as $key => $category) {
+
+            if($key == 0)
+            {
+                $query = $connection->createQueryBuilder();
+                $query->select('category_id')->from('category_extension')->where('extern_id = '.$category['extern_id'] );
+                $statement = $query->execute();
+                if ($statement instanceof Statement) 
+                {
+                    $result = $statement->fetchAll();
+                }
+
+                if(count($result) == 0)
+                {
+                    $id = Uuid::randomHex();
+                    $temp_category = [
+                        "id" => $id,
+                        "name" => $category['name'],
+                        "taxRate" => 19.00
+                    ];
+                    $this->categoryRepository->create([
+                        $temp_category
+                    ], $context);  
+                    $this->categoryRepository->update([
+                        [
+                            'id' => $id,
+                            'category_extension' => ['extern_id' => $category['extern_id']]
+                        ]
+                    ], $context);
+                }
+                else
+                {
+                    $id = Uuid::fromBytesToHex($result[0]['category_id']);
+                    $temp_category = [
+                        "id" => $id,
+                        "name" => $category['name'],
+                        "taxRate" => 19.00
+                    ];
+                }
+                $array = [
+                    "id" => $id, "parentId" => null, "name" => $category['name']
+                ];
+                array_push($category_ids, $array);
+                continue;
+            }
+
             $query = $connection->createQueryBuilder();
             $query->select('category_id')->from('category_extension')->where('extern_id = '.$category['extern_id'] );
             $statement = $query->execute();
@@ -81,69 +139,60 @@ class WritingProductData
             }
             if(count($result) == 0)
             {
-
-                $query1 = $connection->createQueryBuilder();
-
-                $query1->select('category_id')->from('category_extension')->where('extern_id = '.$category['parent_extern_id'] );
-                $statement1 = $query1->execute();
-
-                if ($statement1 instanceof Statement) {
-                    $result1 = $statement1->fetchAll();
-
+                $query = $connection->createQueryBuilder();
+                $query->select('category_id')->from('category_extension')->where('extern_id = '.$category['parent_extern_id'] );
+                $statement = $query->execute();
+                if ($statement instanceof Statement) {
+                    $result1 = $statement->fetchAll();
                 }
-                $category_id_parent = "";
-                if (count($result1) == 0)
+                if(count($result1) == 0)
                 {
-                    $category_id_parent = Uuid::randomHex();
-                    $this->categoryRepository->create([
-                        [
-                            'id' => $category_id_parent,
-                            'name' => 'null'
-                        ]
-                    ], $context);
-                    $this->categoryRepository->upsert([
-                        [
-                            'id' => $category_id_parent,
-                            'category_extension' => ['extern_id' => $category['parent_extern_id']]
-                        ]
-                    ], $context);
+                    $parentId = $temp_category['id'];
+                    array_push($extern_ids, $category['parent_extern_id']);
                 }
                 else
                 {
-                    $category_id_parent = Uuid::fromBytesToHex($result1[0]['category_id']);
+                    $parentId = Uuid::fromBytesToHex($result1[0]['category_id']);
                 }
 
-                    $category_id = Uuid::randomHex();
-                    $this->categoryRepository->create([
-                        [
-                            'id' => $category_id,
-                            'parentId' => $category_id_parent,
-                            'name' => $category['name']
-                        ]
-                    ], $context);
-                    $this->categoryRepository->upsert([
-                        [
-                            'id' => $category_id,
-                            'category_extension' => ['extern_id' => $category['extern_id']]
-                        ]
-                    ], $context);
-
-                $array = ['category_id' => $category_id, 'name' => $category['name']];
-                array_push($category_ids, $array);    
+                $categoryId = Uuid::randomHex();
+                $this->categoryRepository->create([
+                    [
+                        'id' => $categoryId,
+                        'parentId' => $temp_category['id'],
+                        'name' => $category['name']
+                    ]
+                ], $context);  
+                $this->categoryRepository->update([
+                    [
+                        'id' => $categoryId,
+                        'category_extension' => ['extern_id' => $category['extern_id']]
+                    ]
+                ], $context);
+                $array = [
+                    "id" => $categoryId, "parentId" => $parentId, "name" => $category['name']
+                ];
+                array_push($category_ids, $array);
+                $temp_category = [
+                    "id" => $categoryId,
+                    "name" => $category['name'],
+                    "taxRate" => 19.00
+                ];
             }
             else
             {
-                $category_id = Uuid::fromBytesToHex($result[0]['category_id']);
-                $this->categoryRepository->update([
-                        [
-                            'id' => $category_id,
-                            'name' => $category['name']
-                        ]
-                    ], $context);
-                $array = ['category_id' => $category_id, 'name' => $category['name']];
+                $array = [
+                    "id" => Uuid::fromBytesToHex($result[0]['category_id']), "parentId" => $temp_category['id'], "name" => $category['name']
+                ];
                 array_push($category_ids, $array);
+                $temp_category = [
+                    "id" => $array['id'],
+                    "name" => $category['name'],
+                    "taxRate" => 19.00
+                ];
             }
         }
+
         //property
         foreach ($properties as $property) {
             $query = $connection->createQueryBuilder();
@@ -169,15 +218,85 @@ class WritingProductData
                         'property_group_extension' => ['extern_id' => $property['extern_id']]
                     ]
                 ], $context);
+                $group_optionId = Uuid::randomHex();
+                $this->propertyGroupOptionRepository->create([
+                    [
+                        'id' => $group_optionId,
+                        'groupId' => $propertyGroupID,
+                        'name' => $property['value']
+                    ]
+                ], $context);
 
-                $array = ['groupId' => $propertyGroupID, 'name'=>$property['value']];
+                $array = ['groupId' => $propertyGroupID,'groupOptionId' => $group_optionId, 'name'=>$property['value']];
                 array_push($property_group_ids, $array);
             }
             else
             {
                 $propertyGroupID = Uuid::fromBytesToHex($result[0]['property_group_id']);
-                $array = ['groupId' => $propertyGroupID, 'name'=>$property['value']];
-                array_push($property_group_ids, $array);       
+                $query = $connection->createQueryBuilder();
+                $query->select('id')->from('property_group_option')->where('property_group_id = 0x'.$propertyGroupID );
+                $statement = $query->execute();
+                if ($statement instanceof Statement) {
+                    $result1 = $statement->fetchAll();
+                }
+                if(count($result1) == 0)
+                {
+                    $group_optionId = Uuid::randomHex();
+                    $this->propertyGroupOptionRepository->create([
+                        [
+                            'id' => $group_optionId,
+                            'groupId' => $propertyGroupID,
+                            'name' => $property['value']
+                        ]
+                    ], $context);
+                    $array = ['groupId' => $propertyGroupID,'groupOptionId' => $group_optionId, 'name'=>$property['value']];
+                    array_push($property_group_ids, $array);
+                }
+                else
+                {
+                    foreach ($result1 as $key => $value) {
+                        $query = $connection->createQueryBuilder();
+                        $query->select('name')->from('property_group_option_translation')->where('property_group_option_id = 0x'.Uuid::fromBytesToHex($value['id']) );
+                        $statement = $query->execute();
+                        if ($statement instanceof Statement) {
+                            $result2 = $statement->fetchAll();
+                        }
+                        if(count($result2) == 0)
+                        {
+                            $this->propertyGroupOptionRepository->update([
+                                [
+                                    'id' => $value['id'],
+                                    'groupId' => $propertyGroupID,
+                                    'name' => $property['value']
+                                ]
+                            ], $context);
+                        }
+                        else
+                        {
+                            $same = false;
+                            foreach ($result2 as $key2 => $value2) {
+                                if($property['value'] == $value2['name'])
+                                {
+                                    $same = true;
+                                    break;
+                                }
+                            }
+
+                            if(!$same)
+                            {
+                                $this->propertyGroupOptionRepository->update([
+                                    [
+                                        'id' => Uuid::fromBytesToHex($value['id']),
+                                        'groupId' => $propertyGroupID,
+                                        'name' => $property['value']
+                                    ]
+                                ], $context);
+                            }
+                        }
+                    }
+                    $array = ['groupId' => $propertyGroupID,'groupOptionId' => Uuid::fromBytesToHex($value['id']), 'name'=>$property['value']];
+                    array_push($property_group_ids, $array);
+                }       
             }
         }
         //product
@@ -190,6 +309,7 @@ class WritingProductData
         $tax_id = $this->getTaxId($context);
         $tax = $this->taxRepository->search((new Criteria())->addFilter(new EqualsFilter('id', $tax_id)), $context)->first();
         $grossPrice = $data['price']+($data['price']*$tax->getTaxRate())/100;
+
         $price = [[
                     'linked' => false,
                     'net' => (float) $data['price'],
@@ -199,7 +319,6 @@ class WritingProductData
         if(count($result) == 0)
         {
             $productId = Uuid::randomHex();
-            $context_default = Context::createDefaultContext();
             $this->productRepository->create([
                 [
                     'id' => $productId,
@@ -207,12 +326,10 @@ class WritingProductData
                     'productNumber' => $data['product_number'],
                     'stock' => $data['stock'],
                     'taxId' => $tax_id,
-                    'price' => $price,
-                    'categories' => $category_ids,
-                    'properties' => $property_group_ids
+                    'price' => $price
                 ]
-            ], $context_default);
-            $this->productRepository->upsert([
+            ], $context);
+            $this->productRepository->update([
                 [
                     'id' => $productId,
                     'product_extension' =>
@@ -221,27 +338,87 @@ class WritingProductData
                     ]
                 ]
             ], $context);
+            foreach ($category_ids as $key1 => $value1) {
+                $this->productCategoryRepository->create([
+                    [
+                        'id' => Uuid::randomHex(),
+                        'productId' => $productId,
+                        'categoryId' => $value1['id']
+                    ]
+                ], $context);
+            }
+            foreach ($property_group_ids as $key2 => $value2) {
+                $this->productPropertyRepository->create([
+                    [
+                        'id' => Uuid::randomHex(),
+                        'productId' => $productId,
+                        'optionId' => $value2['id']
+                    ]
+                ], $context);
+            }
         }
         else
         {
             $productId = Uuid::fromBytesToHex($result[0]['product_id']);
-            $this->productRepository->delete([
+            $query = $connection->createQueryBuilder();
+            $query->select('category_id')->from('product_category')->where('product_id = 0x'.$productId );
+            $statement = $query->execute();
+            if ($statement instanceof Statement) {
+                $result1 = $statement->fetchAll();
+            }
+            foreach ($result1 as $key => $value) {
+                $this->productCategoryRepository->delete([
                 [
-                    'id' => $productId,
+                    'productId' => $productId,
+                    'categoryId' => Uuid::fromBytesToHex($value['category_id'])
                 ]
             ], $context);
-            $this->productRepository->create([
+            }
+
+            $query = $connection->createQueryBuilder();
+            $query->select('property_group_option_id')->from('product_property')->where('product_id = 0x'.$productId );
+            $statement = $query->execute();
+            if ($statement instanceof Statement) {
+                $result2 = $statement->fetchAll();
+            }
+            foreach ($result2 as $key1 => $value1) {
+                $this->productPropertyRepository->delete([
+                    [
+                        'productId' => $productId,
+                        'optionId' => Uuid::fromBytesToHex($value1['property_group_option_id'])
+                    ]
+                ], $context);
+            }
+            $this->productRepository->update([
                 [
                     'id' => $productId,
                     'name' => $data['name'],
-                    'productNumber' => $data['product_number'],
                     'stock' => $data['stock'],
                     'taxId' => $tax_id,
-                    'price' => $price,
-                    'categories' => $category_ids,
-                    'properties' => $property_group_ids
+                    'price' => $price
                 ]
             ], $context);
+
+            foreach ($category_ids as $key2 => $value2) {
+                $this->productCategoryRepository->upsert([
+                    [
+                        'id' => Uuid::randomHex(),
+                        'productId' => $productId,
+                        'categoryId' => $value2['id']
+                    ]
+                ], $context);
+            }
+
+            foreach ($property_group_ids as $key3 => $value3) {
+                $this->productPropertyRepository->upsert([
+                    [
+                        'id' => Uuid::randomHex(),
+                        'productId' => $productId,
+                        'optionId' => $value3['groupOptionId']
+                    ]
+                ], $context);
+            }
+
         }
     }
 
