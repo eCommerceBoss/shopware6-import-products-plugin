@@ -411,20 +411,11 @@ class WritingProductData
                     ]
                 ], $context);
             }
+            
             $query = $connection->createQueryBuilder();
-            $query->select('media_id')->from('product_media')->where('product_id = 0x'.$productId );
+            $query->delete('product_media')->where('product_id = 0x'.$productId );
             $statement = $query->execute();
-            if ($statement instanceof Statement) {
-                $result_media = $statement->fetchAll();
-            }
-            foreach ($result_media as $media_id_result) {
-                $this->productMediaRepository->delete([
-                    [
-                        'productId' => $productId,
-                        'mediaId' => Uuid::fromBytesToHex($media_id_result['media_id'])
-                    ]
-                ], $context);    
-            }
+
             $query = $connection->createQueryBuilder();
             $query->select('product_number')->from('product')->where('id = 0x'.$productId );
             $statement = $query->execute();
