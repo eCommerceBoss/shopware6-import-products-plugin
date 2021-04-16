@@ -56,6 +56,12 @@
         <service id="Sas\SyncerModule\Extension\Content\PropertyGroupOption\PropertyGroupOptionExtension">
             <tag name="shopware.entity.extension"/>
         </service>
+        <service id="Sas\SyncerModule\Extension\Content\Product\ProductConfExtensionDefinition">
+            <tag name="shopware.entity.definition" entity="product_conf_extension"/>
+        </service>
+        <service id="Sas\SyncerModule\Extension\Content\Product\ProductConfExtension">
+            <tag name="shopware.entity.extension"/>
+        </service>
 
         <service id="Sas\SyncerModule\Subscriber\Subscriber">
             <argument type="service" id="order.repository"/>

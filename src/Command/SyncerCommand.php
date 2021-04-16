@@ -71,6 +71,7 @@ class SyncerCommand extends Command
             $product['name'] = (string)$article->articledescription;
             $product['product_number'] = (string)$article->articlecode;
             $product['stock'] = (int)$article->articlecurrentstock;
+            $product['configable'] = (bool)$article->articleisconfigurable;
             $price = (string)$article->articlepurchaseprice;
             $price = str_replace(',', '.', $price);
             $product['price'] = number_format((float)$price, 2, '.', '');

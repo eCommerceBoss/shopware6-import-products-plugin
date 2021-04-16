@@ -115,8 +115,8 @@ class Subscriber implements EventSubscriberInterface
 					$data['PaymentRegistered'] = 'paid'; // Shopware order reference
 					$line = [];
 					$line['ConfigurationHeaderId'] = "45"; // number from dropdown
-					$line['PartPriceWithoutVat'] = 100;
-					$line['PartPriceWithVat'] = 121;
+					$line['PartPriceWithoutVat'] = $order->getAmountNet();
+					$line['PartPriceWithVat'] = $order->getAmountTotal();
 					$line['Quantity'] = $orderLineItem->getQuantity();
 					$line['VatPercentage'] = 21;
 					$line['StockExternArticleCode'] = '9900000026837'; // from product API

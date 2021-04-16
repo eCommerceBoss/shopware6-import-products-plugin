@@ -349,6 +349,16 @@ class WritingProductData
                     ]
                 ]
             ], $context);
+
+            $this->productRepository->update([
+                [
+                    'id' => $productId,
+                    'product_conf_extension' =>
+                    [
+                        'configable' =>$data['configable']
+                    ]
+                ]
+            ], $context);
             foreach ($category_ids as $key1 => $value1) {
                 $this->productCategoryRepository->create([
                     [
@@ -456,6 +466,24 @@ class WritingProductData
                 ], $context);
             }
             
+            $query = $connection->createQueryBuilder();
+            $query->select('id')->from('product_conf_extension')->where('product_id = 0x'.$productId );
+            $statement = $query->execute();
+            if ($statement instanceof Statement) {
+                $result4 = $statement->fetchAll();
+            }
+            if(count($result4) == 0)
+            {
+                $this->productRepository->update([
+                    [
+                        'id' => $productId,
+                        'product_conf_extension' =>
+                        [
+                            'configable' =>$data['configable']
+                        ]
+                    ]
+                ], $context);
+            }
 
             foreach ($category_ids as $key2 => $value2) {
                 $this->productCategoryRepository->upsert([
