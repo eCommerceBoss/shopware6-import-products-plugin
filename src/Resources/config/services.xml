@@ -5,6 +5,7 @@
    <imports>
        <import resource="service_controller.xml"/>
        <import resource="service_command.xml"/>
+       <import resource="service_front_controller.xml"/>
    </imports>
     <services>
         <service id="Sas\SyncerModule\Service\WritingProductData" >
@@ -53,12 +54,15 @@
         <service id="Sas\SyncerModule\Extension\Content\PropertyGroupOption\PropertyGroupOptionExtensionDefinition">
             <tag name="shopware.entity.definition" entity="property_group_option_extension"/>
         </service>
+
         <service id="Sas\SyncerModule\Extension\Content\PropertyGroupOption\PropertyGroupOptionExtension">
             <tag name="shopware.entity.extension"/>
         </service>
+
         <service id="Sas\SyncerModule\Extension\Content\Product\ProductConfExtensionDefinition">
             <tag name="shopware.entity.definition" entity="product_conf_extension"/>
         </service>
+
         <service id="Sas\SyncerModule\Extension\Content\Product\ProductConfExtension">
             <tag name="shopware.entity.extension"/>
         </service>
@@ -69,6 +73,15 @@
             <argument type="service" id="order_address.repository"/>
             <argument type="service" id="order_line_item.repository"/>
             <tag name="kernel.event_subscriber"/>
+        </service>
+
+        <service id="Sas\SyncerModule\Service\AddDataToPage" >
+            <argument type="service" id="product_conf_extension.repository"/>
+            <tag name="kernel.event_subscriber" />
+        </service>
+
+        <service id="Sas\SyncerModule\Service\CartConfig" >
+            <argument type="service" id="product.repository"/>
         </service>
     </services>
 </container>

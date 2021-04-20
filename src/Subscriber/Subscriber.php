@@ -40,11 +40,12 @@ class Subscriber implements EventSubscriberInterface
     public function onOrderTransactionWritten (EntityWrittenEvent $event)
     {
         $payloads = $event->getPayloads();
+        $context = $event->getContext();
         foreach ($payloads as $payload) {
             //get the state of the transaction
             $criteria = new Criteria();
             $criteria->addFilter(new EqualsFilter('id', $payload['stateId']));
-            $data = $this->stateMachineStateRepository->search($criteria, $event->getContext());
+            $data = $this->stateMachineStateRepository->search($criteria, $context());
             if ($data) {
                 $currentOrderState = $data->first();
  

@@ -1,0 +1,20 @@
+{% sw_extends '@Storefront/storefront/page/product-detail/buy-widget.html.twig' %}
+
+{% block page_product_detail_ordernumber_container %}
+    {{ parent() }}
+
+    {# Insert your custom field here, as seen below: #}
+    {% if configable %}
+	    <div id="configurator">
+	    	{{testParam | raw}}
+	    {{ sw_csrf('frontend.product.configOption') }}
+	    </div>
+	    <template data-configoption-plugin></template>
+    {% endif %}
+{% endblock %}
+{% block base_script_router %}
+    {{ parent() }}
+    <script>
+        window.router['frontend.product.configOption'] = '{{ path('frontend.product.configOption') }}';
+    </script>
+{% endblock %}
